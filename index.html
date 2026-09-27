@@ -418,84 +418,6 @@
 
   const STATUS_KEYS = ['inCollection', 'watched', 'planned'];
 
-  // ============================================================
-  // Catalogue local de secours.
-  //
-  // Cette app est prévue pour être hébergée sur un site statique normal
-  // (ex. GitHub Pages) plutôt que publiée comme Artifact Claude — c'est
-  // ce changement d'hébergement qui autorise les vrais appels réseau
-  // vers TMDB/Jikan/RAWG plus bas (une page Claude publiée les bloque
-  // entièrement, quelle que soit la clé fournie). Cette liste locale
-  // reste néanmoins utile comme repli : elle s'affiche quand la clé
-  // API correspondante n'est pas encore configurée, ou si un appel
-  // réseau échoue (API en panne, pas de connexion, quota dépassé).
-  // ============================================================
-  const LOCAL_CATALOG = [
-    { title: 'Inception', year: '2010', category: 'film', genre: 'Science-fiction' },
-    { title: 'Le Seigneur des Anneaux : La Communauté de l\'Anneau', year: '2001', category: 'film', genre: 'Fantastique' },
-    { title: 'Pulp Fiction', year: '1994', category: 'film', genre: 'Policier' },
-    { title: 'Fight Club', year: '1999', category: 'film', genre: 'Drame' },
-    { title: 'Interstellar', year: '2014', category: 'film', genre: 'Science-fiction' },
-    { title: 'Le Fabuleux Destin d\'Amélie Poulain', year: '2001', category: 'film', genre: 'Comédie dramatique' },
-    { title: 'Parasite', year: '2019', category: 'film', genre: 'Thriller' },
-    { title: 'La La Land', year: '2016', category: 'film', genre: 'Comédie musicale' },
-    { title: 'Le Voyage de Chihiro', year: '2001', category: 'film', genre: 'Animation' },
-    { title: 'Gladiator', year: '2000', category: 'film', genre: 'Historique' },
-    { title: 'The Dark Knight', year: '2008', category: 'film', genre: 'Action' },
-    { title: 'Titanic', year: '1997', category: 'film', genre: 'Romance' },
-    { title: 'Forrest Gump', year: '1994', category: 'film', genre: 'Drame' },
-    { title: 'Matrix', year: '1999', category: 'film', genre: 'Science-fiction' },
-    { title: 'Whiplash', year: '2014', category: 'film', genre: 'Drame' },
-
-    { title: 'Breaking Bad', year: '2008', category: 'serie', genre: 'Thriller' },
-    { title: 'Game of Thrones', year: '2011', category: 'serie', genre: 'Fantastique' },
-    { title: 'Stranger Things', year: '2016', category: 'serie', genre: 'Fantastique' },
-    { title: 'The Office', year: '2005', category: 'serie', genre: 'Comédie' },
-    { title: 'Peaky Blinders', year: '2013', category: 'serie', genre: 'Drame' },
-    { title: 'Dark', year: '2017', category: 'serie', genre: 'Science-fiction' },
-    { title: 'Chernobyl', year: '2019', category: 'serie', genre: 'Drame historique' },
-    { title: 'Friends', year: '1994', category: 'serie', genre: 'Comédie' },
-    { title: 'The Crown', year: '2016', category: 'serie', genre: 'Drame historique' },
-    { title: 'Better Call Saul', year: '2015', category: 'serie', genre: 'Drame' },
-    { title: 'The Mandalorian', year: '2019', category: 'serie', genre: 'Science-fiction' },
-    { title: 'Fargo', year: '2014', category: 'serie', genre: 'Policier' },
-    { title: 'Sherlock', year: '2010', category: 'serie', genre: 'Policier' },
-    { title: 'La Casa de Papel', year: '2017', category: 'serie', genre: 'Thriller' },
-    { title: 'Succession', year: '2018', category: 'serie', genre: 'Drame' },
-
-    { title: 'L\'Attaque des Titans', year: '2013', category: 'anime', genre: 'Action' },
-    { title: 'One Piece', year: '1999', category: 'anime', genre: 'Aventure' },
-    { title: 'Naruto', year: '2002', category: 'anime', genre: 'Action' },
-    { title: 'Death Note', year: '2006', category: 'anime', genre: 'Thriller' },
-    { title: 'Fullmetal Alchemist: Brotherhood', year: '2009', category: 'anime', genre: 'Aventure' },
-    { title: 'Demon Slayer', year: '2019', category: 'anime', genre: 'Action' },
-    { title: 'My Hero Academia', year: '2016', category: 'anime', genre: 'Action' },
-    { title: 'Cowboy Bebop', year: '1998', category: 'anime', genre: 'Science-fiction' },
-    { title: 'Steins;Gate', year: '2011', category: 'anime', genre: 'Science-fiction' },
-    { title: 'Vinland Saga', year: '2019', category: 'anime', genre: 'Aventure' },
-    { title: 'Jujutsu Kaisen', year: '2020', category: 'anime', genre: 'Action' },
-    { title: 'Hunter x Hunter', year: '2011', category: 'anime', genre: 'Aventure' },
-    { title: 'Violet Evergarden', year: '2018', category: 'anime', genre: 'Drame' },
-    { title: 'Spy x Family', year: '2022', category: 'anime', genre: 'Comédie' },
-    { title: 'Neon Genesis Evangelion', year: '1995', category: 'anime', genre: 'Science-fiction' },
-
-    { title: 'The Legend of Zelda: Breath of the Wild', year: '2017', category: 'jeu', genre: 'Aventure' },
-    { title: 'The Witcher 3: Wild Hunt', year: '2015', category: 'jeu', genre: 'RPG' },
-    { title: 'Red Dead Redemption 2', year: '2018', category: 'jeu', genre: 'Action-aventure' },
-    { title: 'God of War', year: '2018', category: 'jeu', genre: 'Action' },
-    { title: 'Elden Ring', year: '2022', category: 'jeu', genre: 'RPG' },
-    { title: 'The Last of Us Part II', year: '2020', category: 'jeu', genre: 'Action' },
-    { title: 'Minecraft', year: '2011', category: 'jeu', genre: 'Bac à sable' },
-    { title: 'Hades', year: '2020', category: 'jeu', genre: 'Rogue-like' },
-    { title: 'Baldur\'s Gate 3', year: '2023', category: 'jeu', genre: 'RPG' },
-    { title: 'Portal 2', year: '2011', category: 'jeu', genre: 'Réflexion' },
-    { title: 'Hollow Knight', year: '2017', category: 'jeu', genre: 'Metroidvania' },
-    { title: 'Animal Crossing: New Horizons', year: '2020', category: 'jeu', genre: 'Simulation' },
-    { title: 'Cyberpunk 2077', year: '2020', category: 'jeu', genre: 'RPG' },
-    { title: 'Stardew Valley', year: '2016', category: 'jeu', genre: 'Simulation' },
-    { title: 'Dark Souls III', year: '2016', category: 'jeu', genre: 'RPG' },
-  ];
-
   /** Normalise une chaîne pour une comparaison insensible à la casse et aux accents. */
   function normalize(str) {
     return str
@@ -814,29 +736,16 @@
     }
   }
 
-  /**
-   * Filtre le catalogue local de secours. Requête vide => aperçu (les
-   * premières entrées de la catégorie choisie) plutôt qu'une liste vide.
-   */
-  function searchLocalCatalog(query, category) {
-    const q = normalize(query);
-    const filtered = LOCAL_CATALOG.filter((entry) => {
-      if (category && entry.category !== category) return false;
-      if (!q) return true;
-      return normalize(entry.title).includes(q);
-    });
-    return (q ? filtered.slice(0, 15) : filtered.slice(0, 6)).map((entry) => ({ ...entry, source: 'local' }));
-  }
-
   // ============================================================
   // Recherche live : TMDB (films/séries), Jikan (anime), RAWG (jeux).
   //
   // Chaque fonction retourne une liste dans le format commun utilisé
   // partout ailleurs dans l'app : { title, year, category, genre,
-  // posterUrl, sourceRating, source, sourceId }. Une erreur réseau ou
-  // une réponse invalide ne doit jamais faire planter la recherche
-  // globale — voir searchCategory plus bas, qui retombe sur le
-  // catalogue local dans tous les cas d'échec.
+  // posterUrl, sourceRating, source, sourceId }. Aucun repli sur des
+  // données inventées : si une clé manque ou qu'un appel échoue,
+  // searchCategory plus bas renvoie une liste vide accompagnée d'un
+  // statut ('no-key' / 'error') pour que l'écran l'explique clairement
+  // plutôt que d'afficher un faux résultat.
   // ============================================================
   async function searchTmdb(query, category) {
     const endpoint = category === 'serie' ? 'tv' : 'movie';
@@ -905,34 +814,41 @@
   }
 
   /**
-   * Point d'entrée unique de la recherche pour une catégorie donnée.
-   * Retombe systématiquement sur le catalogue local en cas d'absence de
-   * clé API ou d'échec réseau — jamais d'erreur qui casse tout l'écran.
+   * Point d'entrée de la recherche pour une catégorie donnée. Ne renvoie
+   * jamais de données inventées : `status` dit explicitement pourquoi
+   * `results` peut être vide, pour que l'écran l'affiche à l'utilisateur
+   * plutôt que de le laisser croire à "aucun résultat trouvé".
    */
   async function searchCategory(category, query) {
+    if ((category === 'film' || category === 'serie') && !tmdbKey) {
+      return { category, results: [], status: 'no-key' };
+    }
+    if (category === 'jeu' && !rawgKey) {
+      return { category, results: [], status: 'no-key' };
+    }
+
     try {
-      if (category === 'film' || category === 'serie') {
-        if (!tmdbKey) return searchLocalCatalog(query, category);
-        return await searchTmdb(query, category);
-      }
-      if (category === 'anime') {
-        return await searchJikan(query);
-      }
-      if (category === 'jeu') {
-        if (!rawgKey) return searchLocalCatalog(query, category);
-        return await searchRawg(query);
-      }
-      return searchLocalCatalog(query, category);
+      let results;
+      if (category === 'film' || category === 'serie') results = await searchTmdb(query, category);
+      else if (category === 'anime') results = await searchJikan(query);
+      else if (category === 'jeu') results = await searchRawg(query);
+      else results = [];
+      return { category, results, status: 'ok' };
     } catch (err) {
-      console.error('Recherche "' + category + '" indisponible, repli local :', err);
-      return searchLocalCatalog(query, category);
+      console.error('Recherche "' + category + '" indisponible :', err);
+      return { category, results: [], status: 'error' };
     }
   }
 
   async function performSearch(query) {
     const categories = searchCategoryFilter ? [searchCategoryFilter] : ['film', 'serie', 'anime', 'jeu'];
     const perCategory = await Promise.all(categories.map((cat) => searchCategory(cat, query)));
-    return perCategory.flat();
+    return {
+      results: perCategory.flatMap((r) => r.results),
+      // Une seule ligne d'info par statut/catégorie problématique (film et
+      // série partagent la même clé TMDB : on ne veut pas dupliquer le message).
+      notices: perCategory.filter((r) => r.status !== 'ok'),
+    };
   }
 
   function findExistingByTitleCategory(title, category) {
@@ -985,7 +901,7 @@
     { key: 'planned', icon: '🔖', label: 'Ajouter à À voir' },
   ];
 
-  const SOURCE_LABELS = { tmdb: 'TMDB', jikan: 'Jikan', rawg: 'RAWG', local: 'liste locale' };
+  const SOURCE_LABELS = { tmdb: 'TMDB', jikan: 'Jikan', rawg: 'RAWG' };
 
   function buildSuggestionRow(entry) {
     const cat = CATEGORY_BY_ID[entry.category];
@@ -1052,14 +968,29 @@
 
   let searchRequestToken = 0; // évite qu'une réponse tardive écrase un résultat plus récent
 
+  const NOTICE_LABELS = {
+    'film|no-key': '🎬 Films : ajoute ta clé TMDB dans ⚙️ Paramètres pour rechercher.',
+    'serie|no-key': '📺 Séries : ajoute ta clé TMDB dans ⚙️ Paramètres pour rechercher.',
+    'jeu|no-key': '🎮 Jeux : ajoute ta clé RAWG dans ⚙️ Paramètres pour rechercher.',
+    'film|error': '🎬 Films : recherche TMDB indisponible pour le moment.',
+    'serie|error': '📺 Séries : recherche TMDB indisponible pour le moment.',
+    'anime|error': '🌸 Anime : recherche Jikan indisponible pour le moment (limite atteinte ?).',
+    'jeu|error': '🎮 Jeux : recherche RAWG indisponible pour le moment.',
+  };
+
   async function renderSearchResults() {
     const query = document.getElementById('search-input').value;
     const container = document.getElementById('search-results');
 
+    if (!query.trim()) {
+      container.innerHTML = '<div class="no-results">Tape un titre pour lancer la recherche.</div>';
+      return;
+    }
+
     const myToken = ++searchRequestToken;
     container.innerHTML = '<div class="search-loading">Recherche…</div>';
 
-    const matches = await performSearch(query);
+    const { results, notices } = await performSearch(query);
 
     // Si l'utilisateur a retapé quelque chose entre-temps, cette réponse
     // est obsolète : on ne l'affiche pas pour éviter un clignotement/une
@@ -1068,7 +999,19 @@
 
     container.innerHTML = '';
 
-    if (matches.length === 0) {
+    // Fusionne film/serie sous un même message quand aucune clé TMDB n'est
+    // configurée, plutôt que d'afficher deux lignes quasi identiques.
+    const noticeMessages = [...new Set(
+      notices.map((n) => NOTICE_LABELS[n.category + '|' + n.status]).filter(Boolean)
+    )];
+    for (const msg of noticeMessages) {
+      const notice = document.createElement('div');
+      notice.className = 'search-hint';
+      notice.textContent = msg;
+      container.appendChild(notice);
+    }
+
+    if (results.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'no-results';
       empty.innerHTML = 'Aucun résultat pour ce titre.<br>Ajoute-le manuellement ci-dessous.';
@@ -1076,7 +1019,7 @@
       return;
     }
 
-    for (const entry of matches) {
+    for (const entry of results) {
       container.appendChild(buildSuggestionRow(entry));
     }
   }
