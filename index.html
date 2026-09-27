@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ma Collection</title>
+<style>
+  /* ---------- Tokens de couleur (clair / sombre) ---------- */
+  :root {
+    --bg: #f7f5fb;
+    --bg-elevated: #ffffff;
+    --text: #1c1b1f;
+    --text-muted: #6b6673;
+    --accent: #6750a4;
+    --accent-contrast: #ffffff;
+    --border: #e5e1ea;
+    --danger: #b3261e;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+    --chip-bg: #ece6f4;
+    --overlay: rgba(0,0,0,0.45);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141218;
+      --bg-elevated: #211f26;
+      --text: #e6e1e9;
+      --text-muted: #948f99;
+      --accent: #d0bcff;
+      --accent-contrast: #381e72;
+      --border: #36343b;
+      --danger: #f2b8b5;
+      --shadow: 0 1px 3px rgba(0,0,0,0.4);
+      --chip-bg: #332d41;
+      --overlay: rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141218;
+    --bg-elevated: #211f26;
+    --text: #e6e1e9;
+    --text-muted: #948f99;
+    --accent: #d0bcff;
+    --accent-contrast: #381e72;
+    --border: #36343b;
+    --danger: #f2b8b5;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    --chip-bg: #332d41;
+    --overlay: rgba(0,0,0,0.6);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  body { display: flex; flex-direction: column; overflow: hidden; }
+
+  header {
+    flex: 0 0 auto;
+    padding: 14px 16px calc(10px + env(safe-area-inset-top, 0px)) 16px;
+    padding-top: calc(14px + env(safe-area-inset-top, 0px));
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-elevated);
+  }
+  header h1 { font-size: 18px; margin: 0; font-weight: 700; }
+  .icon-btn {
+    background: none; border: none; color: var(--text);
+    font-size: 20px; padding: 6px; cursor: pointer; line-height: 1;
+    border-radius: 8px;
+  }
+  .icon-btn:active { background: var(--chip-bg); }
+
+  main {
+    flex: 1 1 auto; overflow-y: auto; overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ---------- Filtres de catégorie ---------- */
+  .filters {
+    display: flex; gap: 8px; padding: 10px 12px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  .chip {
+    flex: 0 0 auto;
+    padding: 7px 14px; border-radius: 999px;
+    background: var(--chip-bg); color: var(--text);
+    border: 1px solid transparent; font-size: 13px; font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+  }
+  .chip.active { background: var(--accent); color: var(--accent-contrast); }
+
+  /* ---------- Grille de cartes ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px; padding: 4px 12px 90px 12px;
+  }
+  .card {
+    background: var(--bg-elevated);
+    border-radius: 14px; box-shadow: var(--shadow);
+    padding: 12px; cursor: pointer;
+    border: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 6px;
+    min-height: 110px;
+  }
+  .card:active { transform: scale(0.98); }
+  .card-top { display: flex; align-items: center; gap: 8px; }
+  .cat-badge {
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex: 0 0 auto;
+  }
+  .card-title {
+    font-size: 14px; font-weight: 700; line-height: 1.25;
+    overflow: hidden; display: -webkit-box;
+    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .card-meta { font-size: 12px; color: var(--text-muted); }
+  .card-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: auto; }
+  .status-dot {
+    font-size: 11px; padding: 2px 7px; border-radius: 999px;
+    background: var(--chip-bg); color: var(--text-muted); font-weight: 600;
+  }
+  .rating-tag {
+    font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+    background: var(--accent); color: var(--accent-contrast);
+  }
+
+  .empty-state {
+    text-align: center; color: var(--text-muted);
+    padding: 60px 30px; font-size: 14px; line-height: 1.5;
+  }
+  .empty-state .big { font-size: 40px; display: block; margin-bottom: 10px; }
+
+  /* ---------- Barre du bas ---------- */
+  nav.tabbar {
+    flex: 0 0 auto;
+    display: flex; border-top: 1px solid var(--border);
+    background: var(--bg-elevated);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  nav.tabbar button {
+    flex: 1; background: none; border: none; color: var(--text-muted);
+    padding: 10px 4px 8px 4px; font-size: 11px; font-weight: 600;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    cursor: pointer;
+  }
+  nav.tabbar button .tab-icon { font-size: 20px; }
+  nav.tabbar button.active { color: var(--accent); }
+
+  .fab {
+    position: fixed; right: 18px; bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    width: 56px; height: 56px; border-radius: 18px;
+    background: var(--accent); color: var(--accent-contrast);
+    border: none; font-size: 26px; box-shadow: var(--shadow);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 20;
+  }
+
+  /* ---------- Modales ---------- */
+  .modal-overlay {
+    position: fixed; inset: 0; background: var(--overlay);
+    display: flex; align-items: flex-end; justify-content: center;
+    z-index: 50;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal-sheet {
+    background: var(--bg-elevated); width: 100%; max-width: 480px;
+    border-radius: 20px 20px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px)) 18px;
+    max-height: 88vh; overflow-y: auto;
+  }
+  .modal-sheet h2 { margin: 0 0 14px 0; font-size: 17px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 5px; }
+  .field input[type="text"], .field input[type="number"], .field textarea, .field select {
+    width: 100%; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--bg);
+    color: var(--text); font-size: 14px; font-family: inherit;
+  }
+  .field textarea { resize: vertical; min-height: 60px; }
+  .cat-select { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cat-option {
+    flex: 1 1 70px; text-align: center; padding: 10px 4px;
+    border-radius: 12px; border: 2px solid var(--border); cursor: pointer;
+    font-size: 12px; font-weight: 600;
+  }
+  .cat-option.selected { border-color: var(--accent); background: var(--chip-bg); }
+  .cat-option .cat-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+  .status-toggles { display: flex; gap: 8px; }
+  .status-toggle {
+    flex: 1; padding: 10px 4px; text-align: center; border-radius: 12px;
+    border: 2px solid var(--border); cursor: pointer; font-size: 12px; font-weight: 600;
+  }
+  .status-toggle.selected { border-color: var(--accent); background: var(--chip-bg); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .btn {
+    flex: 1; padding: 12px; border-radius: 12px; border: none;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .btn-primary { background: var(--accent); color: var(--accent-contrast); }
+  .btn-secondary { background: var(--chip-bg); color: var(--text); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+  .error-msg { color: var(--danger); font-size: 12px; margin-top: -8px; margin-bottom: 12px; display: none; }
+  .error-msg.visible { display: block; }
+
+  .search-hint { font-size: 11px; color: var(--text-muted); margin: 6px 2px 10px 2px; line-height: 1.4; }
+  .search-hint a { color: var(--accent); }
+
+  .search-modal-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .search-modal-header input {
+    flex: 1; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--bg);
+    color: var(--text); font-size: 15px;
+  }
+
+  #search-results { max-height: 50vh; overflow-y: auto; }
+  .suggestion-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 6px; border-bottom: 1px solid var(--border);
+  }
+  .suggestion-poster {
+    width: 40px; height: 56px; border-radius: 6px; object-fit: cover;
+    flex: 0 0 auto; background: var(--chip-bg);
+  }
+  .suggestion-info { flex: 1; min-width: 0; cursor: pointer; }
+  .suggestion-title { font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .suggestion-meta { font-size: 12px; color: var(--text-muted); }
+  .suggestion-actions { display: flex; gap: 4px; flex: 0 0 auto; }
+  .quick-add-btn {
+    width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--chip-bg); font-size: 15px; cursor: pointer;
+  }
+  .quick-add-btn.added { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); }
+  .no-results { text-align: center; color: var(--text-muted); font-size: 13px; padding: 30px 10px; }
+  .search-loading { text-align: center; color: var(--text-muted); font-size: 13px; padding: 20px 10px; }
+
+  .card-poster {
+    width: 100%; aspect-ratio: 2/3; border-radius: 10px; object-fit: cover;
+    background: var(--chip-bg); display: block;
+  }
+
+  .settings-list button {
+    width: 100%; text-align: left; padding: 14px 4px; background: none; border: none;
+    border-bottom: 1px solid var(--border); color: var(--text); font-size: 14px;
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+  }
+  .settings-list button:last-child { border-bottom: none; }
+  #import-file-input { display: none; }
+  .toast {
+    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: var(--bg); padding: 10px 18px;
+    border-radius: 999px; font-size: 13px; z-index: 100; opacity: 0;
+    transition: opacity 0.25s; pointer-events: none;
+  }
+  .toast.visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎬 Ma Collection</h1>
+  <button class="icon-btn" id="btn-settings" aria-label="Paramètres">⚙️</button>
+</header>
+
+<main>
+  <div class="filters" id="category-filters"></div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<button class="fab" id="btn-add" aria-label="Rechercher / ajouter une œuvre">+</button>
+
+<nav class="tabbar" id="tabbar">
+  <button data-tab="collection" class="active"><span class="tab-icon">📦</span>Collection</button>
+  <button data-tab="watched"><span class="tab-icon">👁️</span>Vu</button>
+  <button data-tab="planned"><span class="tab-icon">🔖</span>À voir</button>
+</nav>
+
+<!-- ---------- Écran de recherche avec suggestions + ajout rapide ---------- -->
+<div class="modal-overlay hidden" id="search-modal">
+  <div class="modal-sheet" style="max-height: 92vh;">
+    <div class="search-modal-header">
+      <input type="text" id="search-input" placeholder="Écris un titre..." autocomplete="off">
+      <button class="icon-btn" id="btn-close-search" aria-label="Fermer">✕</button>
+    </div>
+    <div class="filters" id="search-category-filters" style="padding-left:0; padding-right:0;"></div>
+    <div class="search-hint">Résultats en direct (TMDB / Jikan / RAWG) selon les clés configurées dans ⚙️ Paramètres. Sans clé, une petite liste locale de secours est utilisée.</div>
+    <div id="search-results"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-manual-add">➕ Ajouter manuellement une œuvre</button>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- Modale d'ajout / édition ---------- -->
+<div class="modal-overlay hidden" id="edit-modal">
+  <div class="modal-sheet">
+    <h2 id="edit-modal-title">Ajouter une œuvre</h2>
+
+    <div class="field">
+      <label for="f-title">Titre *</label>
+      <input type="text" id="f-title" placeholder="Ex. Le Seigneur des Anneaux" maxlength="150">
+      <div class="error-msg" id="err-title">Le titre est obligatoire.</div>
+    </div>
+
+    <div class="field">
+      <label>Catégorie *</label>
+      <div class="cat-select" id="cat-select"></div>
+    </div>
+
+    <div class="field">
+      <label>Statut (plusieurs possibles)</label>
+      <div class="status-toggles" id="status-toggles">
+        <div class="status-toggle" data-status="inCollection">📦 Collection</div>
+        <div class="status-toggle" data-status="watched">👁️ Vu</div>
+        <div class="status-toggle" data-status="planned">🔖 À voir</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="f-rating">Ma note (0 à 10, optionnel)</label>
+      <input type="number" id="f-rating" min="0" max="10" step="0.5" placeholder="Ex. 8.5">
+      <div class="error-msg" id="err-rating">La note doit être comprise entre 0 et 10.</div>
+    </div>
+
+    <div class="field">
+      <label for="f-year">Année (optionnel)</label>
+      <input type="text" id="f-year" inputmode="numeric" maxlength="4" placeholder="Ex. 2001">
+    </div>
+
+    <div class="field">
+      <label for="f-note">Commentaire personnel (optionnel)</label>
+      <textarea id="f-note" placeholder="Tes impressions, à qui le conseiller..." maxlength="1000"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-cancel-edit">Annuler</button>
+      <button class="btn btn-primary" id="btn-save">Enregistrer</button>
+    </div>
+    <div class="modal-actions" id="delete-row" style="display:none;">
+      <button class="btn btn-danger" id="btn-delete">Supprimer cette œuvre</button>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- Modale paramètres (clés API + export / import) ---------- -->
+<div class="modal-overlay hidden" id="settings-modal">
+  <div class="modal-sheet">
+    <h2>Paramètres</h2>
+
+    <div class="field">
+      <label for="f-tmdb-key">Clé API TMDB (films / séries)</label>
+      <input type="text" id="f-tmdb-key" placeholder="Colle ta clé ici" autocomplete="off">
+      <div class="search-hint">
+        Gratuite — <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">créer un compte et obtenir une clé sur themoviedb.org</a>.
+        Sans clé, la recherche films/séries utilise la petite liste locale de secours.
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="f-rawg-key">Clé API RAWG (jeux vidéo) — optionnel</label>
+      <input type="text" id="f-rawg-key" placeholder="Colle ta clé ici" autocomplete="off">
+      <div class="search-hint">
+        Gratuite — <a href="https://rawg.io/apidocs" target="_blank" rel="noopener">créer un compte et obtenir une clé sur rawg.io</a>.
+        Sans clé, la recherche jeux utilise la liste locale de secours.
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="btn-save-keys">Enregistrer les clés</button>
+    </div>
+
+    <div class="settings-list" style="margin-top: 10px;">
+      <button id="btn-export">⬇️ Exporter ma bibliothèque (sauvegarde)</button>
+      <button id="btn-import">⬆️ Importer une sauvegarde</button>
+    </div>
+    <input type="file" id="import-file-input" accept="application/json">
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-close-settings">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ============================================================
+  // Constantes
+  // ============================================================
+  const STORAGE_KEY = 'ma_collection_items_v1';
+  const TMDB_KEY_STORAGE = 'ma_collection_tmdb_key';
+  const RAWG_KEY_STORAGE = 'ma_collection_rawg_key';
+
+  /** Lecture protégée d'une clé API en localStorage (jamais bloquant si indisponible). */
+  function loadApiKey(storageKey) {
+    try {
+      return localStorage.getItem(storageKey) || '';
+    } catch (e) {
+      console.error('Lecture de clé API impossible :', e);
+      return '';
+    }
+  }
+
+  let tmdbKey = loadApiKey(TMDB_KEY_STORAGE);
+  let rawgKey = loadApiKey(RAWG_KEY_STORAGE);
+
+  const CATEGORIES = [
+    { id: 'film',   label: 'Film',   icon: '🎬' },
+    { id: 'serie',  label: 'Série',  icon: '📺' },
+    { id: 'anime',  label: 'Anime',  icon: '🌸' },
+    { id: 'jeu',    label: 'Jeu',    icon: '🎮' },
+  ];
+  const CATEGORY_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
+
+  const STATUS_KEYS = ['inCollection', 'watched', 'planned'];
+
+  // ============================================================
+  // Catalogue local de secours.
+  //
+  // Cette app est prévue pour être hébergée sur un site statique normal
+  // (ex. GitHub Pages) plutôt que publiée comme Artifact Claude — c'est
+  // ce changement d'hébergement qui autorise les vrais appels réseau
+  // vers TMDB/Jikan/RAWG plus bas (une page Claude publiée les bloque
+  // entièrement, quelle que soit la clé fournie). Cette liste locale
+  // reste néanmoins utile comme repli : elle s'affiche quand la clé
+  // API correspondante n'est pas encore configurée, ou si un appel
+  // réseau échoue (API en panne, pas de connexion, quota dépassé).
+  // ============================================================
+  const LOCAL_CATALOG = [
+    { title: 'Inception', year: '2010', category: 'film', genre: 'Science-fiction' },
+    { title: 'Le Seigneur des Anneaux : La Communauté de l\'Anneau', year: '2001', category: 'film', genre: 'Fantastique' },
+    { title: 'Pulp Fiction', year: '1994', category: 'film', genre: 'Policier' },
+    { title: 'Fight Club', year: '1999', category: 'film', genre: 'Drame' },
+    { title: 'Interstellar', year: '2014', category: 'film', genre: 'Science-fiction' },
+    { title: 'Le Fabuleux Destin d\'Amélie Poulain', year: '2001', category: 'film', genre: 'Comédie dramatique' },
+    { title: 'Parasite', year: '2019', category: 'film', genre: 'Thriller' },
+    { title: 'La La Land', year: '2016', category: 'film', genre: 'Comédie musicale' },
+    { title: 'Le Voyage de Chihiro', year: '2001', category: 'film', genre: 'Animation' },
+    { title: 'Gladiator', year: '2000', category: 'film', genre: 'Historique' },
+    { title: 'The Dark Knight', year: '2008', category: 'film', genre: 'Action' },
+    { title: 'Titanic', year: '1997', category: 'film', genre: 'Romance' },
+    { title: 'Forrest Gump', year: '1994', category: 'film', genre: 'Drame' },
+    { title: 'Matrix', year: '1999', category: 'film', genre: 'Science-fiction' },
+    { title: 'Whiplash', year: '2014', category: 'film', genre: 'Drame' },
+
+    { title: 'Breaking Bad', year: '2008', category: 'serie', genre: 'Thriller' },
+    { title: 'Game of Thrones', year: '2011', category: 'serie', genre: 'Fantastique' },
+    { title: 'Stranger Things', year: '2016', category: 'serie', genre: 'Fantastique' },
+    { title: 'The Office', year: '2005', category: 'serie', genre: 'Comédie' },
+    { title: 'Peaky Blinders', year: '2013', category: 'serie', genre: 'Drame' },
+    { title: 'Dark', year: '2017', category: 'serie', genre: 'Science-fiction' },
+    { title: 'Chernobyl', year: '2019', category: 'serie', genre: 'Drame historique' },
+    { title: 'Friends', year: '1994', category: 'serie', genre: 'Comédie' },
+    { title: 'The Crown', year: '2016', category: 'serie', genre: 'Drame historique' },
+    { title: 'Better Call Saul', year: '2015', category: 'serie', genre: 'Drame' },
+    { title: 'The Mandalorian', year: '2019', category: 'serie', genre: 'Science-fiction' },
+    { title: 'Fargo', year: '2014', category: 'serie', genre: 'Policier' },
+    { title: 'Sherlock', year: '2010', category: 'serie', genre: 'Policier' },
+    { title: 'La Casa de Papel', year: '2017', category: 'serie', genre: 'Thriller' },
+    { title: 'Succession', year: '2018', category: 'serie', genre: 'Drame' },
+
+    { title: 'L\'Attaque des Titans', year: '2013', category: 'anime', genre: 'Action' },
+    { title: 'One Piece', year: '1999', category: 'anime', genre: 'Aventure' },
+    { title: 'Naruto', year: '2002', category: 'anime', genre: 'Action' },
+    { title: 'Death Note', year: '2006', category: 'anime', genre: 'Thriller' },
+    { title: 'Fullmetal Alchemist: Brotherhood', year: '2009', category: 'anime', genre: 'Aventure' },
+    { title: 'Demon Slayer', year: '2019', category: 'anime', genre: 'Action' },
+    { title: 'My Hero Academia', year: '2016', category: 'anime', genre: 'Action' },
+    { title: 'Cowboy Bebop', year: '1998', category: 'anime', genre: 'Science-fiction' },
+    { title: 'Steins;Gate', year: '2011', category: 'anime', genre: 'Science-fiction' },
+    { title: 'Vinland Saga', year: '2019', category: 'anime', genre: 'Aventure' },
+    { title: 'Jujutsu Kaisen', year: '2020', category: 'anime', genre: 'Action' },
+    { title: 'Hunter x Hunter', year: '2011', category: 'anime', genre: 'Aventure' },
+    { title: 'Violet Evergarden', year: '2018', category: 'anime', genre: 'Drame' },
+    { title: 'Spy x Family', year: '2022', category: 'anime', genre: 'Comédie' },
+    { title: 'Neon Genesis Evangelion', year: '1995', category: 'anime', genre: 'Science-fiction' },
+
+    { title: 'The Legend of Zelda: Breath of the Wild', year: '2017', category: 'jeu', genre: 'Aventure' },
+    { title: 'The Witcher 3: Wild Hunt', year: '2015', category: 'jeu', genre: 'RPG' },
+    { title: 'Red Dead Redemption 2', year: '2018', category: 'jeu', genre: 'Action-aventure' },
+    { title: 'God of War', year: '2018', category: 'jeu', genre: 'Action' },
+    { title: 'Elden Ring', year: '2022', category: 'jeu', genre: 'RPG' },
+    { title: 'The Last of Us Part II', year: '2020', category: 'jeu', genre: 'Action' },
+    { title: 'Minecraft', year: '2011', category: 'jeu', genre: 'Bac à sable' },
+    { title: 'Hades', year: '2020', category: 'jeu', genre: 'Rogue-like' },
+    { title: 'Baldur\'s Gate 3', year: '2023', category: 'jeu', genre: 'RPG' },
+    { title: 'Portal 2', year: '2011', category: 'jeu', genre: 'Réflexion' },
+    { title: 'Hollow Knight', year: '2017', category: 'jeu', genre: 'Metroidvania' },
+    { title: 'Animal Crossing: New Horizons', year: '2020', category: 'jeu', genre: 'Simulation' },
+    { title: 'Cyberpunk 2077', year: '2020', category: 'jeu', genre: 'RPG' },
+    { title: 'Stardew Valley', year: '2016', category: 'jeu', genre: 'Simulation' },
+    { title: 'Dark Souls III', year: '2016', category: 'jeu', genre: 'RPG' },
+  ];
+
+  /** Normalise une chaîne pour une comparaison insensible à la casse et aux accents. */
+  function normalize(str) {
+    return str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  // ============================================================
+  // État en mémoire (synchronisé avec localStorage à chaque mutation)
+  // ============================================================
+  let items = [];
+  let currentTab = 'collection'; // 'collection' | 'watched' | 'planned'
+  let currentCategoryFilter = null; // null = toutes
+  let editingItemId = null; // null = mode création
+
+  // ============================================================
+  // Persistance locale — toujours protégée par try/catch : le
+  // stockage peut être plein, désactivé (navigation privée) ou son
+  // contenu corrompu par une version antérieure du format.
+  // ============================================================
+  function loadItems() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      // Filtre défensif : on ignore toute entrée qui ne ressemble pas à
+      // un item valide plutôt que de faire planter tout le rendu.
+      return parsed.filter((it) => it && typeof it.id === 'string' && typeof it.title === 'string');
+    } catch (e) {
+      console.error('Lecture localStorage impossible :', e);
+      showToast('Erreur de lecture des données locales');
+      return [];
+    }
+  }
+
+  function saveItems() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      return true;
+    } catch (e) {
+      console.error('Écriture localStorage impossible :', e);
+      showToast('Impossible de sauvegarder (stockage plein ou bloqué)');
+      return false;
+    }
+  }
+
+  function genId() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
+  }
+
+  // ============================================================
+  // Rendu : filtres de catégorie
+  // ============================================================
+  function renderCategoryFilters() {
+    const container = document.getElementById('category-filters');
+    container.innerHTML = '';
+
+    const allChip = document.createElement('button');
+    allChip.className = 'chip' + (currentCategoryFilter === null ? ' active' : '');
+    allChip.textContent = 'Tout';
+    allChip.onclick = () => { currentCategoryFilter = null; renderCategoryFilters(); renderGrid(); };
+    container.appendChild(allChip);
+
+    for (const cat of CATEGORIES) {
+      const chip = document.createElement('button');
+      chip.className = 'chip' + (currentCategoryFilter === cat.id ? ' active' : '');
+      chip.textContent = cat.icon + ' ' + cat.label;
+      chip.onclick = () => { currentCategoryFilter = cat.id; renderCategoryFilters(); renderGrid(); };
+      container.appendChild(chip);
+    }
+  }
+
+  // ============================================================
+  // Rendu : grille principale, dépend de l'onglet + filtre actifs
+  // ============================================================
+  const EMPTY_MESSAGES = {
+    collection: { icon: '📦', text: 'Ta collection est vide.\nAjoute les films, séries, animes ou jeux que tu possèdes.' },
+    watched:    { icon: '👁️', text: 'Rien de marqué comme vu pour l\'instant.' },
+    planned:    { icon: '🔖', text: 'Aucune œuvre prévue pour l\'instant.' },
+  };
+
+  function getVisibleItems() {
+    return items.filter((it) => {
+      if (currentTab === 'collection' && !it.inCollection) return false;
+      if (currentTab === 'watched' && !it.watched) return false;
+      if (currentTab === 'planned' && !it.planned) return false;
+      if (currentCategoryFilter && it.category !== currentCategoryFilter) return false;
+      return true;
+    }).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('grid');
+    const visible = getVisibleItems();
+
+    if (visible.length === 0) {
+      const msg = EMPTY_MESSAGES[currentTab];
+      grid.innerHTML = '';
+      const empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.style.gridColumn = '1 / -1';
+      empty.innerHTML = '<span class="big">' + msg.icon + '</span>' + escapeHtml(msg.text).replace(/\n/g, '<br>');
+      grid.appendChild(empty);
+      return;
+    }
+
+    grid.innerHTML = '';
+    for (const item of visible) {
+      grid.appendChild(buildCard(item));
+    }
+  }
+
+  function buildCard(item) {
+    const cat = CATEGORY_BY_ID[item.category] || { icon: '❔', label: item.category };
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.onclick = () => openEditModal(item.id);
+
+    if (item.posterUrl) {
+      const img = document.createElement('img');
+      img.className = 'card-poster';
+      img.src = item.posterUrl;
+      img.alt = '';
+      img.loading = 'lazy';
+      // Si l'image ne charge pas (lien mort, hors-ligne...), on retombe sur
+      // l'icône de catégorie plutôt que de laisser une icône d'image cassée.
+      img.onerror = () => { img.replaceWith(buildCatBadge(cat)); };
+      card.appendChild(img);
+    } else {
+      const top = document.createElement('div');
+      top.className = 'card-top';
+      top.appendChild(buildCatBadge(cat));
+      card.appendChild(top);
+    }
+
+    const title = document.createElement('div');
+    title.className = 'card-title';
+    title.textContent = item.title;
+    card.appendChild(title);
+
+    if (item.year) {
+      const meta = document.createElement('div');
+      meta.className = 'card-meta';
+      meta.textContent = item.year;
+      card.appendChild(meta);
+    }
+
+    const badges = document.createElement('div');
+    badges.className = 'card-badges';
+    if (typeof item.sourceRating === 'number') {
+      const sourceTag = document.createElement('span');
+      sourceTag.className = 'status-dot';
+      sourceTag.textContent = '🌐 ' + item.sourceRating.toFixed(1);
+      badges.appendChild(sourceTag);
+    }
+    if (item.personalRating !== null && item.personalRating !== undefined) {
+      const rating = document.createElement('span');
+      rating.className = 'rating-tag';
+      rating.textContent = '★ ' + item.personalRating;
+      badges.appendChild(rating);
+    }
+    card.appendChild(badges);
+
+    return card;
+  }
+
+  function buildCatBadge(cat) {
+    const badge = document.createElement('div');
+    badge.className = 'cat-badge';
+    badge.style.background = 'var(--chip-bg)';
+    badge.textContent = cat.icon;
+    return badge;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ============================================================
+  // Onglets
+  // ============================================================
+  document.getElementById('tabbar').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-tab]');
+    if (!btn) return;
+    currentTab = btn.dataset.tab;
+    document.querySelectorAll('#tabbar button').forEach((b) => b.classList.toggle('active', b === btn));
+    renderGrid();
+  });
+
+  // ============================================================
+  // Modale d'ajout / édition
+  // ============================================================
+  const editModal = document.getElementById('edit-modal');
+  let selectedCategory = null;
+  let selectedStatuses = new Set();
+
+  function renderCategorySelect() {
+    const container = document.getElementById('cat-select');
+    container.innerHTML = '';
+    for (const cat of CATEGORIES) {
+      const opt = document.createElement('div');
+      opt.className = 'cat-option' + (selectedCategory === cat.id ? ' selected' : '');
+      opt.innerHTML = '<span class="cat-icon">' + cat.icon + '</span>' + cat.label;
+      opt.onclick = () => { selectedCategory = cat.id; renderCategorySelect(); };
+      container.appendChild(opt);
+    }
+  }
+
+  function renderStatusToggles() {
+    document.querySelectorAll('.status-toggle').forEach((el) => {
+      el.classList.toggle('selected', selectedStatuses.has(el.dataset.status));
+    });
+  }
+
+  document.getElementById('status-toggles').addEventListener('click', (e) => {
+    const el = e.target.closest('.status-toggle');
+    if (!el) return;
+    const key = el.dataset.status;
+    if (selectedStatuses.has(key)) selectedStatuses.delete(key); else selectedStatuses.add(key);
+    renderStatusToggles();
+  });
+
+  let currentPrefill = null; // métadonnées (affiche, note source) d'une suggestion, en attente d'enregistrement
+
+  function openAddModal(prefill) {
+    editingItemId = null;
+    currentPrefill = prefill || null;
+    selectedCategory = (prefill && prefill.category) || currentCategoryFilter || 'film';
+    selectedStatuses = new Set(
+      currentTab === 'collection' ? ['inCollection'] :
+      currentTab === 'watched' ? ['watched'] :
+      currentTab === 'planned' ? ['planned'] : []
+    );
+    document.getElementById('edit-modal-title').textContent = 'Ajouter une œuvre';
+    document.getElementById('f-title').value = prefill ? prefill.title : '';
+    document.getElementById('f-rating').value = '';
+    document.getElementById('f-year').value = prefill && prefill.year ? prefill.year : '';
+    document.getElementById('f-note').value = '';
+    document.getElementById('delete-row').style.display = 'none';
+    clearErrors();
+    renderCategorySelect();
+    renderStatusToggles();
+    editModal.classList.remove('hidden');
+    // Focus différé : évite de déclencher le clavier avant l'animation d'ouverture.
+    // Si le titre est déjà pré-rempli (venu d'une suggestion), on amène plutôt
+    // le focus sur la note pour accélérer la saisie.
+    const focusTarget = prefill ? 'f-rating' : 'f-title';
+    setTimeout(() => document.getElementById(focusTarget).focus(), 50);
+  }
+
+  function openEditModal(id) {
+    const item = items.find((it) => it.id === id);
+    if (!item) return;
+    editingItemId = id;
+    currentPrefill = null;
+    selectedCategory = item.category;
+    selectedStatuses = new Set(STATUS_KEYS.filter((k) => item[k]));
+    document.getElementById('edit-modal-title').textContent = 'Modifier';
+    document.getElementById('f-title').value = item.title;
+    document.getElementById('f-rating').value = item.personalRating ?? '';
+    document.getElementById('f-year').value = item.year || '';
+    document.getElementById('f-note').value = item.personalNote || '';
+    document.getElementById('delete-row').style.display = 'flex';
+    clearErrors();
+    renderCategorySelect();
+    renderStatusToggles();
+    editModal.classList.remove('hidden');
+  }
+
+  function closeEditModal() {
+    editModal.classList.add('hidden');
+    editingItemId = null;
+    currentPrefill = null;
+  }
+
+  // ============================================================
+  // Écran de recherche : suggestions locales + ajout rapide
+  // ============================================================
+  let searchCategoryFilter = null;
+
+  function openSearchModal() {
+    document.getElementById('search-input').value = '';
+    searchCategoryFilter = null;
+    renderSearchCategoryFilters();
+    renderSearchResults();
+    document.getElementById('search-modal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('search-input').focus(), 50);
+  }
+
+  function closeSearchModal() {
+    document.getElementById('search-modal').classList.add('hidden');
+  }
+
+  function renderSearchCategoryFilters() {
+    const container = document.getElementById('search-category-filters');
+    container.innerHTML = '';
+
+    const allChip = document.createElement('button');
+    allChip.className = 'chip' + (searchCategoryFilter === null ? ' active' : '');
+    allChip.textContent = 'Tout';
+    allChip.onclick = () => { searchCategoryFilter = null; renderSearchCategoryFilters(); renderSearchResults(); };
+    container.appendChild(allChip);
+
+    for (const cat of CATEGORIES) {
+      const chip = document.createElement('button');
+      chip.className = 'chip' + (searchCategoryFilter === cat.id ? ' active' : '');
+      chip.textContent = cat.icon + ' ' + cat.label;
+      chip.onclick = () => { searchCategoryFilter = cat.id; renderSearchCategoryFilters(); renderSearchResults(); };
+      container.appendChild(chip);
+    }
+  }
+
+  /**
+   * Filtre le catalogue local de secours. Requête vide => aperçu (les
+   * premières entrées de la catégorie choisie) plutôt qu'une liste vide.
+   */
+  function searchLocalCatalog(query, category) {
+    const q = normalize(query);
+    const filtered = LOCAL_CATALOG.filter((entry) => {
+      if (category && entry.category !== category) return false;
+      if (!q) return true;
+      return normalize(entry.title).includes(q);
+    });
+    return (q ? filtered.slice(0, 15) : filtered.slice(0, 6)).map((entry) => ({ ...entry, source: 'local' }));
+  }
+
+  // ============================================================
+  // Recherche live : TMDB (films/séries), Jikan (anime), RAWG (jeux).
+  //
+  // Chaque fonction retourne une liste dans le format commun utilisé
+  // partout ailleurs dans l'app : { title, year, category, genre,
+  // posterUrl, sourceRating, source, sourceId }. Une erreur réseau ou
+  // une réponse invalide ne doit jamais faire planter la recherche
+  // globale — voir searchCategory plus bas, qui retombe sur le
+  // catalogue local dans tous les cas d'échec.
+  // ============================================================
+  async function searchTmdb(query, category) {
+    const endpoint = category === 'serie' ? 'tv' : 'movie';
+    const url = 'https://api.themoviedb.org/3/search/' + endpoint +
+      '?api_key=' + encodeURIComponent(tmdbKey) +
+      '&language=fr-FR&query=' + encodeURIComponent(query);
+
+    const res = await fetch(url);
+    if (res.status === 401) throw new Error('Clé TMDB invalide');
+    if (!res.ok) throw new Error('Erreur TMDB ' + res.status);
+    const data = await res.json();
+
+    return (data.results || []).slice(0, 15).map((r) => ({
+      title: r.title || r.name || '?',
+      year: (r.release_date || r.first_air_date || '').slice(0, 4) || null,
+      category,
+      genre: null,
+      posterUrl: r.poster_path ? 'https://image.tmdb.org/t/p/w200' + r.poster_path : null,
+      sourceRating: typeof r.vote_average === 'number' && r.vote_average > 0
+        ? Math.round(r.vote_average * 10) / 10 : null,
+      source: 'tmdb',
+      sourceId: String(r.id),
+    }));
+  }
+
+  async function searchJikan(query) {
+    const url = 'https://api.jikan.moe/v4/anime?limit=15&q=' + encodeURIComponent(query);
+    const res = await fetch(url);
+    if (res.status === 429) throw new Error('Limite Jikan atteinte, réessaie dans un instant');
+    if (!res.ok) throw new Error('Erreur Jikan ' + res.status);
+    const data = await res.json();
+
+    return (data.data || []).map((a) => ({
+      title: a.title_english || a.title || '?',
+      year: a.aired && a.aired.from ? a.aired.from.slice(0, 4) : null,
+      category: 'anime',
+      genre: (a.genres && a.genres[0]) ? a.genres[0].name : null,
+      posterUrl: a.images && a.images.jpg ? (a.images.jpg.image_url || null) : null,
+      sourceRating: typeof a.score === 'number' ? a.score : null,
+      source: 'jikan',
+      sourceId: String(a.mal_id),
+    }));
+  }
+
+  async function searchRawg(query) {
+    const url = 'https://api.rawg.io/api/games?page_size=15' +
+      '&key=' + encodeURIComponent(rawgKey) +
+      '&search=' + encodeURIComponent(query);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Erreur RAWG ' + res.status);
+    const data = await res.json();
+
+    return (data.results || []).map((g) => ({
+      title: g.name || '?',
+      year: g.released ? g.released.slice(0, 4) : null,
+      category: 'jeu',
+      genre: (g.genres && g.genres[0]) ? g.genres[0].name : null,
+      posterUrl: g.background_image || null,
+      // RAWG note sur 5 -> on convertit sur 10 pour rester cohérent avec
+      // le reste de l'app (notes personnelles sur 10).
+      sourceRating: typeof g.rating === 'number' && g.rating > 0
+        ? Math.round(g.rating * 2 * 10) / 10 : null,
+      source: 'rawg',
+      sourceId: String(g.id),
+    }));
+  }
+
+  /**
+   * Point d'entrée unique de la recherche pour une catégorie donnée.
+   * Retombe systématiquement sur le catalogue local en cas d'absence de
+   * clé API ou d'échec réseau — jamais d'erreur qui casse tout l'écran.
+   */
+  async function searchCategory(category, query) {
+    try {
+      if (category === 'film' || category === 'serie') {
+        if (!tmdbKey) return searchLocalCatalog(query, category);
+        return await searchTmdb(query, category);
+      }
+      if (category === 'anime') {
+        return await searchJikan(query);
+      }
+      if (category === 'jeu') {
+        if (!rawgKey) return searchLocalCatalog(query, category);
+        return await searchRawg(query);
+      }
+      return searchLocalCatalog(query, category);
+    } catch (err) {
+      console.error('Recherche "' + category + '" indisponible, repli local :', err);
+      return searchLocalCatalog(query, category);
+    }
+  }
+
+  async function performSearch(query) {
+    const categories = searchCategoryFilter ? [searchCategoryFilter] : ['film', 'serie', 'anime', 'jeu'];
+    const perCategory = await Promise.all(categories.map((cat) => searchCategory(cat, query)));
+    return perCategory.flat();
+  }
+
+  function findExistingByTitleCategory(title, category) {
+    const target = normalize(title);
+    return items.find((it) => it.category === category && normalize(it.title) === target);
+  }
+
+  /**
+   * Ajoute une entrée du catalogue à une liste (ou met à jour l'entrée
+   * existante si ce titre/catégorie est déjà présent) — sans jamais créer
+   * de doublon pour le même titre dans la même catégorie.
+   */
+  function addOrUpdateFromCatalog(entry, statusKey) {
+    const now = new Date().toISOString();
+    let item = findExistingByTitleCategory(entry.title, entry.category);
+
+    if (item) {
+      item[statusKey] = true;
+      item.updatedAt = now;
+      // On rafraîchit les métadonnées venant de la source (affiche, note du
+      // site) si cette entrée en fournit de meilleures, sans jamais toucher
+      // à la note/au commentaire personnels de l'utilisateur.
+      if (entry.posterUrl) item.posterUrl = entry.posterUrl;
+      if (typeof entry.sourceRating === 'number') item.sourceRating = entry.sourceRating;
+    } else {
+      items.push({
+        id: genId(),
+        title: entry.title,
+        category: entry.category,
+        inCollection: statusKey === 'inCollection',
+        watched: statusKey === 'watched',
+        planned: statusKey === 'planned',
+        personalRating: null,
+        year: entry.year || null,
+        personalNote: null,
+        posterUrl: entry.posterUrl || null,
+        sourceRating: typeof entry.sourceRating === 'number' ? entry.sourceRating : null,
+        addedAt: now,
+        updatedAt: now,
+      });
+    }
+
+    if (!saveItems()) return;
+    renderGrid();
+  }
+
+  const STATUS_QUICK_BUTTONS = [
+    { key: 'inCollection', icon: '📦', label: 'Ajouter à Ma collection' },
+    { key: 'watched', icon: '👁️', label: 'Marquer comme vu' },
+    { key: 'planned', icon: '🔖', label: 'Ajouter à À voir' },
+  ];
+
+  const SOURCE_LABELS = { tmdb: 'TMDB', jikan: 'Jikan', rawg: 'RAWG', local: 'liste locale' };
+
+  function buildSuggestionRow(entry) {
+    const cat = CATEGORY_BY_ID[entry.category];
+    const existing = findExistingByTitleCategory(entry.title, entry.category);
+
+    const row = document.createElement('div');
+    row.className = 'suggestion-row';
+
+    if (entry.posterUrl) {
+      const img = document.createElement('img');
+      img.className = 'suggestion-poster';
+      img.src = entry.posterUrl;
+      img.alt = '';
+      img.loading = 'lazy';
+      img.onerror = () => { img.style.visibility = 'hidden'; };
+      row.appendChild(img);
+    }
+
+    const info = document.createElement('div');
+    info.className = 'suggestion-info';
+    info.onclick = () => {
+      closeSearchModal();
+      openAddModal({
+        title: entry.title,
+        category: entry.category,
+        year: entry.year,
+        posterUrl: entry.posterUrl,
+        sourceRating: entry.sourceRating,
+      });
+    };
+    const titleEl = document.createElement('div');
+    titleEl.className = 'suggestion-title';
+    titleEl.textContent = cat.icon + ' ' + entry.title;
+    const metaParts = [entry.year, entry.genre].filter(Boolean);
+    if (typeof entry.sourceRating === 'number') metaParts.push('🌐 ' + entry.sourceRating.toFixed(1));
+    metaParts.push(SOURCE_LABELS[entry.source] || entry.source);
+    const metaEl = document.createElement('div');
+    metaEl.className = 'suggestion-meta';
+    metaEl.textContent = metaParts.join(' • ');
+    info.appendChild(titleEl);
+    info.appendChild(metaEl);
+    row.appendChild(info);
+
+    const actions = document.createElement('div');
+    actions.className = 'suggestion-actions';
+    for (const sb of STATUS_QUICK_BUTTONS) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'quick-add-btn' + (existing && existing[sb.key] ? ' added' : '');
+      btn.textContent = sb.icon;
+      btn.setAttribute('aria-label', sb.label);
+      btn.onclick = (ev) => {
+        ev.stopPropagation(); // ne pas déclencher l'ouverture de la modale d'édition
+        addOrUpdateFromCatalog(entry, sb.key);
+        showToast('Ajouté');
+        renderSearchResults(); // rafraîchit l'état "coché" des boutons de cette ligne
+      };
+      actions.appendChild(btn);
+    }
+    row.appendChild(actions);
+
+    return row;
+  }
+
+  let searchRequestToken = 0; // évite qu'une réponse tardive écrase un résultat plus récent
+
+  async function renderSearchResults() {
+    const query = document.getElementById('search-input').value;
+    const container = document.getElementById('search-results');
+
+    const myToken = ++searchRequestToken;
+    container.innerHTML = '<div class="search-loading">Recherche…</div>';
+
+    const matches = await performSearch(query);
+
+    // Si l'utilisateur a retapé quelque chose entre-temps, cette réponse
+    // est obsolète : on ne l'affiche pas pour éviter un clignotement/une
+    // incohérence entre la barre et les résultats affichés.
+    if (myToken !== searchRequestToken) return;
+
+    container.innerHTML = '';
+
+    if (matches.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'no-results';
+      empty.innerHTML = 'Aucun résultat pour ce titre.<br>Ajoute-le manuellement ci-dessous.';
+      container.appendChild(empty);
+      return;
+    }
+
+    for (const entry of matches) {
+      container.appendChild(buildSuggestionRow(entry));
+    }
+  }
+
+  // Debounce réseau : on attend une pause dans la frappe avant d'appeler
+  // les API, pour éviter une requête à chaque lettre tapée (et respecter
+  // les limites de taux, notamment celle de Jikan).
+  let searchDebounceTimer = null;
+  document.getElementById('search-input').addEventListener('input', () => {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(renderSearchResults, 350);
+  });
+
+  document.getElementById('btn-close-search').onclick = closeSearchModal;
+  document.getElementById('btn-manual-add').onclick = () => { closeSearchModal(); openAddModal(); };
+  document.getElementById('search-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'search-modal') closeSearchModal();
+  });
+
+  function clearErrors() {
+    document.getElementById('err-title').classList.remove('visible');
+    document.getElementById('err-rating').classList.remove('visible');
+  }
+
+  function validateAndSave() {
+    clearErrors();
+    const title = document.getElementById('f-title').value.trim();
+    const ratingRaw = document.getElementById('f-rating').value.trim();
+    let hasError = false;
+
+    if (!title) {
+      document.getElementById('err-title').classList.add('visible');
+      hasError = true;
+    }
+
+    let rating = null;
+    if (ratingRaw !== '') {
+      rating = parseFloat(ratingRaw);
+      if (Number.isNaN(rating) || rating < 0 || rating > 10) {
+        document.getElementById('err-rating').classList.add('visible');
+        hasError = true;
+      }
+    }
+
+    if (hasError) return;
+
+    const now = new Date().toISOString();
+    const year = document.getElementById('f-year').value.trim();
+    const note = document.getElementById('f-note').value.trim();
+
+    if (editingItemId) {
+      const item = items.find((it) => it.id === editingItemId);
+      item.title = title;
+      item.category = selectedCategory;
+      item.inCollection = selectedStatuses.has('inCollection');
+      item.watched = selectedStatuses.has('watched');
+      item.planned = selectedStatuses.has('planned');
+      item.personalRating = rating;
+      item.year = year || null;
+      item.personalNote = note || null;
+      item.updatedAt = now;
+    } else {
+      items.push({
+        id: genId(),
+        title,
+        category: selectedCategory,
+        inCollection: selectedStatuses.has('inCollection'),
+        watched: selectedStatuses.has('watched'),
+        planned: selectedStatuses.has('planned'),
+        personalRating: rating,
+        year: year || null,
+        personalNote: note || null,
+        posterUrl: (currentPrefill && currentPrefill.posterUrl) || null,
+        sourceRating: (currentPrefill && typeof currentPrefill.sourceRating === 'number')
+          ? currentPrefill.sourceRating : null,
+        addedAt: now,
+        updatedAt: now,
+      });
+    }
+
+    if (!saveItems()) return; // en cas d'échec de sauvegarde, on ne ferme pas la modale
+    currentPrefill = null;
+    closeEditModal();
+    renderGrid();
+    showToast(editingItemId ? 'Modifié' : 'Ajouté');
+  }
+
+  function deleteCurrentItem() {
+    if (!editingItemId) return;
+    if (!confirm('Supprimer définitivement cette œuvre de ta bibliothèque ?')) return;
+    items = items.filter((it) => it.id !== editingItemId);
+    saveItems();
+    closeEditModal();
+    renderGrid();
+    showToast('Supprimé');
+  }
+
+  document.getElementById('btn-add').onclick = openSearchModal;
+  document.getElementById('btn-cancel-edit').onclick = closeEditModal;
+  document.getElementById('btn-save').onclick = validateAndSave;
+  document.getElementById('btn-delete').onclick = deleteCurrentItem;
+  editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
+
+  // ============================================================
+  // Paramètres : export / import (sauvegarde JSON)
+  // ============================================================
+  const settingsModal = document.getElementById('settings-modal');
+  document.getElementById('btn-settings').onclick = () => {
+    document.getElementById('f-tmdb-key').value = tmdbKey;
+    document.getElementById('f-rawg-key').value = rawgKey;
+    settingsModal.classList.remove('hidden');
+  };
+  document.getElementById('btn-close-settings').onclick = () => settingsModal.classList.add('hidden');
+  settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) settingsModal.classList.add('hidden'); });
+
+  document.getElementById('btn-save-keys').onclick = () => {
+    const newTmdbKey = document.getElementById('f-tmdb-key').value.trim();
+    const newRawgKey = document.getElementById('f-rawg-key').value.trim();
+    try {
+      localStorage.setItem(TMDB_KEY_STORAGE, newTmdbKey);
+      localStorage.setItem(RAWG_KEY_STORAGE, newRawgKey);
+      tmdbKey = newTmdbKey;
+      rawgKey = newRawgKey;
+      showToast('Clés enregistrées');
+    } catch (e) {
+      console.error('Sauvegarde des clés API impossible :', e);
+      showToast('Impossible d\'enregistrer les clés (stockage bloqué)');
+    }
+  };
+
+  document.getElementById('btn-export').onclick = () => {
+    try {
+      const payload = JSON.stringify({ exportedAt: new Date().toISOString(), items }, null, 2);
+      const blob = new Blob([payload], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const filename = 'ma_collection_sauvegarde_' + new Date().toISOString().slice(0, 10) + '.json';
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast('Sauvegarde téléchargée');
+    } catch (e) {
+      console.error('Export impossible :', e);
+      showToast('Export impossible sur cet appareil');
+    }
+  };
+
+  document.getElementById('btn-import').onclick = () => {
+    document.getElementById('import-file-input').click();
+  };
+
+  document.getElementById('import-file-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result);
+        const incoming = Array.isArray(parsed) ? parsed : parsed.items;
+        if (!Array.isArray(incoming)) throw new Error('Format de sauvegarde invalide');
+
+        const valid = incoming.filter((it) => it && typeof it.title === 'string');
+        if (valid.length === 0) throw new Error('Aucune œuvre valide dans ce fichier');
+
+        // Fusion par id : une entrée importée remplace l'existante si même id,
+        // sinon on lui attribue un nouvel id pour éviter toute collision.
+        const existingIds = new Set(items.map((it) => it.id));
+        for (const incomingItem of valid) {
+          const id = (incomingItem.id && !existingIds.has(incomingItem.id)) ? incomingItem.id : genId();
+          items = items.filter((it) => it.id !== id);
+          items.push({ ...incomingItem, id });
+          existingIds.add(id);
+        }
+
+        saveItems();
+        renderGrid();
+        settingsModal.classList.add('hidden');
+        showToast(valid.length + ' œuvre(s) importée(s)');
+      } catch (err) {
+        console.error('Import impossible :', err);
+        showToast('Fichier de sauvegarde invalide');
+      } finally {
+        e.target.value = ''; // permet de réimporter le même fichier plus tard
+      }
+    };
+    reader.onerror = () => showToast('Lecture du fichier impossible');
+    reader.readAsText(file);
+  });
+
+  // ============================================================
+  // Toast (petit message de confirmation temporaire)
+  // ============================================================
+  let toastTimeout = null;
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('visible');
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => toast.classList.remove('visible'), 2200);
+  }
+
+  // ============================================================
+  // Démarrage
+  // ============================================================
+  items = loadItems();
+  renderCategoryFilters();
+  renderGrid();
+})();
+</script>
+
+</body>
+</html>
